@@ -49,8 +49,8 @@
                 {{-- Receipt Header --}}
                 <div class="px-6 pb-4 border-b-2 border-gray-300 border-dashed">
                     <div class="text-center">
-                        <div class="text-2xl font-bold mb-0 tracking-wide">PING</div>
-                        <div class="text-xs text-gray-600 uppercase tracking-wider">Message for Andrew Schmelyun</div>
+                        <div class="text-2xl font-bold mb-0 tracking-wide">PING ME!</div>
+                        <div class="text-xs text-gray-600 uppercase tracking-wider">Send a Receipt Message to Phil McDonnell</div>
                     </div>
                 </div>
 
@@ -96,7 +96,7 @@
                     <div class="text-xs text-gray-600 space-y-1 mb-4">
                         <div class="text-center">***************************************</div>
                         <div class="text-center font-bold">THANKS FOR STOPPING BY</div>
-                        <div class="text-center">Your message will be sent to my desk</div>
+                        <div class="text-center">Your message will be sent to my receipt printer</div>
                         <div class="text-center">***************************************</div>
                     </div>
 

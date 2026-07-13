@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Receipt;
-use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\Printer;
 
 class SendMessageController extends Controller
@@ -32,7 +32,8 @@ class SendMessageController extends Controller
 
 	    Receipt::create($request->only(['transaction', 'message']));
 
-        $connector = new FilePrintConnector('/dev/usb/lp0');
+        //$connector = new FilePrintConnector('/dev/usb/lp0');
+        $connector = new WindowsPrintConnector("StarTSP100");
         $printer = new Printer($connector);
 
         // let me know something's coming
@@ -46,7 +47,7 @@ class SendMessageController extends Controller
         $printer->feed(2);
         $printer->setTextSize(1, 1);
         $printer->setEmphasis(false);
-        $printer->text('MESSAGE FOR ANDREW SCHMELYUN');
+        $printer->text('MESSAGE FOR PHIL MCDONNELL');
         $printer->feed(1);
 
         $printer->setJustification(Printer::JUSTIFY_LEFT);
@@ -64,7 +65,7 @@ class SendMessageController extends Controller
         $printer->cut();
         $printer->close();
 
-        $request->session()->flash('success', 'Your message was sent successfully, woohoo!');
+        $request->session()->flash('success', 'Your message was sent successfully, WooHoo!');
 
         return redirect()->back();
     }
