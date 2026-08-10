@@ -1,38 +1,81 @@
-# Ping Receipt
+# PING Receipt
 
-Welcome to the repo for my anonymous [ping](https://ping.aschmelyun.com) site that prints out a receipt on my desk.
+PING is a small PHP application that lets a visitor send text and an optional image to Phil McDonnell's local Star TSP100 receipt printer.
 
-If you're coming from [my video](https://www.youtube.com/watch?v=7KtyekivpRM) and would like to explore this project's source code, feel free! It's pretty basic, most of the functionality lies inside of the `app/Http/Controllers/SendMessageController.php` class.
+This version is adapted from [Andrew Schmelyun's original project](https://github.com/aschmelyun/ping-receipt). It removes Laravel and renders each complete receipt as a black-and-white image for the Windows Star printer driver.
 
-If you'd like to set this project up for yourself, follow these instructions:
+## Requirements
 
-**Step 1.** Gather your hardware.
+- PHP 8.2 or newer
+- PHP extensions: Fileinfo, GD, PDO, and PDO SQLite
+- Composer
+- For real printing: a Windows-shared Star TSP100 receipt printer
 
-You'll need:
+## Install
 
-- An Epson receipt printer (or another brand that can use ESC/POS formatting). You can find older models like the TM-T88IV on eBay for about $50 USD.
-
-- Some piece of hardware running Linux with an open USB port. Performance-wise it just needs enough juice to power Docker, most Raspberry Pis should work well enough.
-
-Get everything set up, powered on, and connected together.
-
-**Step 2.** Clone this repo.
-
-On your Linux hardware above, clone this repo into a place you'll be able to easily access and remember. Open up a terminal window into that location, and run the following command:
-
-```sh
-docker build -t ping-app:latest .
+```powershell
+composer install
+php bin/migrate.php
 ```
 
-That will build the Docker image needed for the application, and then to run it, use the included `start.sh` script.
+## Safe local preview
 
-You should now be able to visit the site at `localhost:8000`!
+The default printer mode writes a text receipt and processed image to `storage/print-output`; it does not operate the real printer.
 
-**Step 3.** Open up public traffic (optional).
+```powershell
+.\start.ps1
+```
 
-If you want to open up your own ping site to public traffic, you'll likely need to use a tunnelling service. I recommend either:
+Open <http://127.0.0.1:8000>.
 
-- [ngrok](https://ngrok.com)
-- [cloudflare tunnels](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
+## Real printer mode
 
-Follow the documentation for either of them, installing the required daemons on your hardware and ensuring that the forwarded port is the same one exposed from the start.sh command above (e.g. `:8000`).
+Set these values only in the service environment on the Windows machine connected to the printer:
+
+```powershell
+$env:PING_PRINTER_MODE='windows'
+$env:PING_PRINTER_NAME='StarTSP100'
+```
+
+Then start the application through the production Windows web service. Do not use PHP's built-in development server as the permanent public origin.
+
+## Images
+
+The form accepts JPEG, PNG, and WebP files up to 5 MB. Files are verified by content, bounded by pixel count, resized to the configured printer width, flattened onto white, converted to grayscale PNG, and stored outside the public directory. A successfully printed image is deleted. An image for a failed print is retained for `bin/retry-failed.php`.
+
+## Tests
+
+```powershell
+composer test
+```
+
+Tests use temporary SQLite storage and fake printer output. They never operate the Star printer.
+
+## Configuration
+
+Configuration is read from environment variables. Secrets do not belong in the repository.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PING_PRINTER_MODE` | `file` | `file` for safe output or `windows` for the real printer |
+| `PING_PRINTER_NAME` | `StarTSP100` | Windows printer share name |
+| `PING_DATABASE` | `storage/ping.sqlite` | SQLite database path |
+| `PING_UPLOAD_PATH` | `storage/uploads` | Private processed-image storage |
+| `PING_OUTPUT_PATH` | `storage/print-output` | Fake-printer output |
+| `PING_PRINTER_WIDTH` | `512` | Maximum processed image width in pixels |
+| `PING_MAX_IMAGE_BYTES` | `5242880` | Maximum upload size |
+| `PING_MAX_IMAGE_PIXELS` | `20000000` | Decompression safety limit |
+| `PING_RATE_LIMIT` | `10` | Requests allowed per window |
+| `PING_RATE_WINDOW` | `60` | Rate-limit window in seconds |
+| `PING_TIMEZONE` | `America/New_York` | Timezone used on printed receipts |
+
+## Public hosting
+
+Bind the origin to localhost and expose only the intended service through the existing Cloudflare Tunnel. Keep tunnel credentials and service configuration outside this repository.
+
+The verified Windows deployment uses:
+
+- `PING Caddy` restartable Windows logon task on `127.0.0.1:8000`
+- `PING PHP-CGI` restartable Windows logon task on `127.0.0.1:9000`
+- Existing automatic `Cloudflared` service routing `ping.philmcdonnell.com` to the local origin
+- `Caddyfile` for the localhost server and `bin/run-php-cgi.ps1` for the printer-aware PHP process

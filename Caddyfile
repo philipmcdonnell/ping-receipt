@@ -1,0 +1,32 @@
+{
+	auto_https off
+	admin 127.0.0.1:2019
+}
+
+http://:8000 {
+	root * "C:/Users/phil/Documents/My Projects/Experiments/ping-receipt/public"
+	encode gzip
+	php_fastcgi 127.0.0.1:9000 {
+		capture_stderr
+		env HTTPS on
+		env PING_PRINTER_MODE windows
+		env PING_PRINTER_NAME StarTSP100
+		env PING_TIMEZONE America/New_York
+		env PING_DATABASE "C:/Users/phil/Documents/My Projects/Experiments/ping-receipt/storage/ping.sqlite"
+		env PING_UPLOAD_PATH "C:/Users/phil/Documents/My Projects/Experiments/ping-receipt/storage/uploads"
+	}
+	file_server
+
+	header {
+		-Server
+		-X-Powered-By
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		X-Frame-Options DENY
+		Content-Security-Policy "default-src 'self'; img-src 'self' blob:; style-src 'self'; script-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
+	}
+
+	request_body {
+		max_size 6MB
+	}
+}
