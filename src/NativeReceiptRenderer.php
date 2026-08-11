@@ -44,7 +44,7 @@ final class NativeReceiptRenderer
 
         if ($message !== '') {
             foreach ($this->wrap($message, 42) as $line) {
-                $y = $this->drawLine($canvas, $line, $regular, 16, $y, $black, $hasTrueType, 25);
+                $y = $this->drawLine($canvas, $line, $bold, 16, $y, $black, $hasTrueType, 25);
             }
             $y += 16;
         }
